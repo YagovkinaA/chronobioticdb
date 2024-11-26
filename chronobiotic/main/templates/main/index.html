@@ -1,0 +1,25 @@
+{% extends 'main/base.html'%}
+{%load static%}
+{% block title%}Chronobiotics{%endblock%}
+
+
+    {% block content%}
+
+<div class="container" >
+
+    <img src="{% static 'image/tabletka.png' %}"width="500" height="500" alt="bruh">
+    <h1>Chronobiotic List</h1>
+<input class="form-control" type="search" placeholder="Insert name, formula , SMILES or fda status"> <button class="btn btn-secondary" type="submit">Search</button>
+</form>
+</div>
+
+
+  <ul>{%for chems in model%}
+<p>{{chems.gname}}   {{chems.molecula}}  {{chems.fdastatus}}</p></ul>
+
+{%endfor%}
+
+
+{% endblock%}
+
+
