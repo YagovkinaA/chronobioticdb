@@ -21,7 +21,8 @@ class Targets(models.Model):
     """
     Model representing a chem class (e.g. chronobiotics, radioprotectors).
     """
-    targetsname = models.CharField(max_length=128, help_text="Enter a target(e.g. relax, energy, tea , coffe)")
+    targetstxxxxx = models.CharField(max_length=150, help_text="Enter a target(Txxxxx)")
+    targetsbasename=models.CharField(max_length=150, help_text="Enter a target fullname")
     targeturl = models.URLField(max_length=200, help_text="Enter a link about this target")
     class Meta:
         db_table: str='target'
@@ -30,7 +31,7 @@ class Targets(models.Model):
         """
         String for representing the Model object (in Admin site etc.)
         """
-        return self.targetsmname
+        return self.targetstxxxxx
 class Mechanism(models.Model):
     """
     Model representing a chem class (e.g. chronobiotics, radioprotectors).

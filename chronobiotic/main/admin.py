@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import  Chronobiotic, Targets, Bioclass, Mechanism,Synonyms
+from .models import  Chronobiotic, Targets , Bioclass, Mechanism,Synonyms
 
 @admin.register(Chronobiotic)
 class Chronobioadm(admin.ModelAdmin):
