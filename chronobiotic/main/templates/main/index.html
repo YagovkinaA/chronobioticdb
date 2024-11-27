@@ -5,17 +5,48 @@
 
     {% block content%}
 
-<div class="container" >
+<div class="container text-center">
 
-    <img src="{% static 'image/tabletka.png' %}"width="500" height="500" alt="bruh">
-    <h1>Chronobiotic List</h1>
-<input class="form-control" type="search" placeholder="Insert name, formula , SMILES or fda status"> <button class="btn btn-secondary" type="submit">Search</button>
-</form>
+    <img src="{% static 'image/tabletka.png' %}" class="rounded mx-auto d-block" width="400" height="400" alt="bruh">
+    <h1 class="title"> List of Chronobiotics (Pre-alfa)</h1>
+    <br>
+
+
+    <nav class="navbar navbar-second bg-second">
+  <form class="form-inline">
+    <input class="form-control mr-sm-2" type="search" placeholder="Insert name, formula, SMILES etc." aria-label="Search">
+<!--   <div class="input-group-append">-->
+<!--    <button class="btn btn-secondary my-2 my-sm-0" type="submit" id="button-addon2">Button</button>-->
+<!--       </div>-->
+  </form>
+</nav>
+
+
 </div>
+<br>
+<ul>{%for chems in model%}
+<table  class="table table-borderless">
+  <thead>
+    <tr>
+<!--      <th scope="col">#</th>-->
+      <th scope="col">Name</th>
+      <th scope="col">Formula</th>
+      <th scope="col">FDA status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+
+      <td>{{chems.gname}} </td>
+      <td>{{chems.molecula}}</td>
+      <td>{{chems.fdastatus}}</td>
+    </tr>
+
+  </tbody>
+</table>
 
 
-  <ul>{%for chems in model%}
-<p>{{chems.gname}}   {{chems.molecula}}  {{chems.fdastatus}}</p></ul>
+<!--<p>{{chems.gname}}   {{chems.molecula}}  {{chems.fdastatus}}</p></ul>-->
 
 {%endfor%}
 
