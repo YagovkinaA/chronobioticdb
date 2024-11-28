@@ -10,11 +10,21 @@ from django.views import generic
 #         return Chronobiotic.objects.all()
 
 def index(request):
-    model = Chronobiotic.objects.all()
-    # context={
-    #   model:model,
-    # }
-    return render(request,'main/index.html',{'model':model})
+    query = request.GET.get('search', '')  # Получаем поисковый запрос из параметра search
+    if query:
+        # Фильтруем по имени, формуле или статусу
+        model = Chronobiotic.objects.filter(
+            gname__icontains=query
+        ) | Chronobiotic.objects.filter(
+            molecula__icontains=query
+        ) | Chronobiotic.objects.filter(
+            fdastatus__icontains=query
+        )
+    else:
+        # Если нет поискового запроса, показываем всё
+        model = Chronobiotic.objects.all()
+
+    return render(request, 'main/index.html', {'model': model, 'query': query})
 def about(request):
     return render(request,'main/about.html')
 # def chrono(request):

@@ -1,56 +1,118 @@
-{% extends 'main/base.html'%}
-{%load static%}
-{% block title%}Chronobiotics{%endblock%}
+{% extends 'main/base.html' %}
+{% load static %}
+{% block title %}Chronobiotics{% endblock %}
 
-
-    {% block content%}
+{% block content %}
 
 <div class="container text-center">
-
-    <img src="{% static 'image/tabletka.png' %}" class="rounded mx-auto d-block" width="400" height="400" alt="bruh">
+    <img src="{% static 'image/tabletka.png' %}" class="rounded mx-auto d-block" width="330" height="330" alt="Logo">
     <h1 class="title"> List of Chronobiotics (Pre-alfa)</h1>
     <br>
 
-
+    <!-- Поисковая строка -->
     <nav class="navbar navbar-second bg-second">
-  <form class="form-inline">
-    <input class="form-control mr-sm-2" type="search" placeholder="Insert name, formula, SMILES etc." aria-label="Search">
-<!--   <div class="input-group-append">-->
-<!--    <button class="btn btn-secondary my-2 my-sm-0" type="submit" id="button-addon2">Button</button>-->
-<!--       </div>-->
-  </form>
-</nav>
+        <form method="get" class="form-inline">
+            <input class="form-control mr-sm-2" type="search" name="search" placeholder="Insert name, formula, SMILES etc."
+                   value="{{ query }}" aria-label="Search">
 
-
+        </form>
+    </nav>
 </div>
 <br>
-<ul>{%for chems in model%}
-<table  class="table table-borderless">
-  <thead>
-    <tr>
-<!--      <th scope="col">#</th>-->
-      <th scope="col">Name</th>
-      <th scope="col">Formula</th>
-      <th scope="col">FDA status</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
 
-      <td>{{chems.gname}} </td>
-      <td>{{chems.molecula}}</td>
-      <td>{{chems.fdastatus}}</td>
+<!-- Таблица -->
+<table class="table table-bordered">
+    <thead>
+    <tr>
+        <th scope="col">Name</th>
+        <th scope="col">Formula</th>
+        <th scope="col">FDA Status</th>
     </tr>
-
-  </tbody>
+    </thead>
+    <tbody>
+    {% for chems in model %}
+        <tr>
+            <td>
+                <!-- Кнопка для модального окна -->
+                <button type="button"
+                        class="btn btn-second"
+                        data-toggle="modal"
+                        data-target="#infoModal"
+                        data-name="{{ chems.gname }}"
+                        data-formula="{{ chems.molecula }}"
+                        data-linkslist="{{ chems.linkslists }}"
+                        data-description="{{ chems.description }}"
+                        >
+                    {{ chems.gname }}
+                </button>
+            </td>
+            <td>{{ chems.molecula }}</td>
+            <td>{{ chems.fdastatus }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
 </table>
 
-</ul>
-<!--<p>{{chems.gname}}   {{chems.molecula}}  {{chems.fdastatus}}</p></ul>-->
+<!-- Модальное окно -->
+<!-- Модальное окно -->
+<div class="modal fade" id="infoModal" tabindex="-1" role="dialog" aria-labelledby="infoModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="infoModalLabel">Information</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Статичное изображение всегда в начале -->
+                <div class="text-center">
+                    <img src="{% static 'image/Rosiglitazone.png' %}" alt="Static Image" class="img-fluid mb-3" style="max-width: 100%; height: auto;">
+                </div>
+                <!-- Динамическое содержимое -->
+                <p><strong>Name:</strong> <span id="modal-name"></span></p>
+                <p><strong>Formula:</strong> <span id="modal-formula"></span></p>
+                <!-- Список ссылок как кликаемая ссылка -->
+                <p><strong>Reference Links:</strong> <a href="#" id="modal-linkslist" target="_blank">Click here</a></p>
+                <p><strong>Description:</strong> <span id="modal-description"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-{%endfor%}
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script>
+    // Логика для модального окна
+    $('#infoModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var name = button.data('name');
+        var formula = button.data('formula');
+        var linkslist = button.data('linkslist');
+        var description = button.data('description');
+
+        var modal = $(this);
+
+        // Устанавливаем данные в модальное окно
+        modal.find('#modal-name').text(name);
+        modal.find('#modal-formula').text(formula);
+        modal.find('#modal-description').text(description);
+
+        // Динамическая ссылка
+        var linkslistElement = modal.find('#modal-linkslist');
+        if (linkslist) {
+            linkslistElement.attr('href', linkslist);
+            linkslistElement.text('Reference list'); // Текст ссылки
+        } else {
+            linkslistElement.removeAttr('href');
+            linkslistElement.text('No links available');
+        }
+    });
+</script>
 
 
-{% endblock%}
-
+{% endblock %}
 
