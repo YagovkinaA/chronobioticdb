@@ -19,7 +19,7 @@ class Synonyms(models.Model):
         return self.synonymsmname
 class Targets(models.Model):
     """
-    Model representing a chem class (e.g. chronobiotics, radioprotectors).
+    Model representing a chem class (e.g. chronobiotics, radioprotectors)
     """
     targetsname = models.CharField(max_length=150, help_text="Enter a target(Txxxxx)")
     targetsfullname=models.CharField(max_length=150, blank=True,help_text="Enter a fullname")
