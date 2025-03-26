@@ -80,7 +80,7 @@ class Chronobiotic(models.Model):
     molecula = models.CharField(max_length=256, unique=True)
     iupacname = models.CharField(max_length=256, unique=True)
     updphoto= models.ImageField(upload_to='media/')
-    description = models.TextField(max_length=1000, help_text="Enter a  description of the biotic",blank=True)
+    description = models.TextField(max_length=5000, help_text="Enter a  description of the biotic",blank=True)
     fdastatus = models.CharField(max_length=64,null=True,blank=True)
     article= models.URLField(max_length = 200,null=True,blank=True)
     linkslists=models.URLField(max_length=200,null=True,blank=True)

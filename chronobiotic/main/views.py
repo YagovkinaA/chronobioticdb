@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator
 from .models import Chronobiotic
 
@@ -24,3 +24,6 @@ def index(request):
 
 def about(request):
     return render(request, 'main/about.html')
+def substance_detail(request, linkname):
+    substance = get_object_or_404(Chronobiotic, linkname=linkname)
+    return render(request, 'main/substance_detail.html', {'substance': substance})
