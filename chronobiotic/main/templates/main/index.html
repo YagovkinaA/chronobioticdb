@@ -9,7 +9,7 @@
     <br>
     <br>
     <img src="{% static 'image/chrono.png' %}" class="rounded mx-auto d-block" width="800" height="400" alt="Logo">
-    <h1 class="title"> List of Chronobiotics (Pre-alfa)</h1>
+    <h1 class="title"> List of Chronobiotics </h1>
     <br>
 
     <!-- Поисковая строка -->
@@ -27,35 +27,61 @@
     <thead>
         <tr>
             <th scope="col">Name</th>
-            <th scope="col">SMILES</th>  <!-- Изменено с Formula на SMILES -->
+            <th scope="col">SMILES</th>
             <th scope="col">FDA Status</th>
+            <th scope="col">Effects</th>
+            <th scope="col">Targets</th>
+            <th scope="col">Mechanisms</th>
+            <th scope="col">Articles</th>
         </tr>
     </thead>
     <tbody>
         {% for item in page_obj %}
             <tr>
                 <td>
-                    <!-- Кнопка для открытия модального окна -->
-                  <button type="button"
-        class="btn btn-second"
-        data-toggle="modal"
-        data-target="#infoModal"
-        data-name="{{ item.gname }}"
-        data-formula="{{ item.molecula }}"
-        data-smiles="{{ item.smiles }}"
-        data-image="{{ item.updphoto.url }}"
-        data-linkname="{{ item.linkname }}"
-        data-description="{{ item.description }}">
-    {{ item.gname }}
-</button>
+                    <button type="button"
+                            class="btn btn-second"
+                            data-toggle="modal"
+                            data-target="#infoModal"
+                            data-name="{{ item.gname }}"
+                            data-formula="{{ item.molecula }}"
+                            data-smiles="{{ item.smiles }}"
+                            data-image="{{ item.updphoto.url }}"
+                            data-linkname="{{ item.linkname }}"
+                            data-description="{{ item.description }}">
+                        {{ item.gname }}
+                    </button>
                 </td>
-                <td>{{ item.smiles }}</td>  <!-- Изменено с molecula на smiles -->
+                <td>{{ item.smiles }}</td>
                 <td>{{ item.fdastatus }}</td>
+                <td>
+                    {% for effect in item.effect.all %}
+                        {{ effect.Effectname }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </td>
+                <td>
+                    {% for target in item.target.all %}
+                        <a href="{{ target.targeturl }}" target="_blank" class="text-decoration-none">
+                            {{ target.targetsname }}
+                        </a>{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </td>
+                <td>
+                    {% for mechanism in item.mechanisms.all %}
+                        {{ mechanism.mechanismname }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </td>
+                <td>
+                    {% for article in item.articles.all %}
+                        <a href="{{ article.articleurl }}" target="_blank" class="text-decoration-none">
+                            {{ article.articlename }}
+                        </a>{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </td>
             </tr>
         {% endfor %}
     </tbody>
 </table>
-
 
 
 <!-- Модальное окно -->
@@ -69,11 +95,19 @@
                 </button>
             </div>
             <div class="modal-body">
-                <img id="modal-image" src="" alt="Molecule Image" class="modal-image">
-                <p><strong>Name:</strong> <span id="modal-name"></span></p>
-                <p><strong>Formula:</strong> <span id="modal-formula"></span></p>
-                <p><strong>SMILES:</strong> <span id="modal-smiles"></span></p>
-                <p><strong>Description:</strong> <span id="modal-description"></span></p>
+                <div class="row">
+                    <div class="col-md-4">
+                        <img id="modal-image" src="" alt="Molecule Image" class="img-fluid mb-3">
+                    </div>
+                    <div class="col-md-8">
+                        <p><strong>Name:</strong> <span id="modal-name"></span></p>
+                        <p><strong>Synonyms:</strong> <span id="modal-synonyms"></span></p>
+                        <p><strong>Formula:</strong> <span id="modal-formula"></span></p>
+                        <p><strong>SMILES:</strong> <span id="modal-smiles"></span></p>
+                        <p><strong>FDA Status:</strong> <span id="modal-fdastatus"></span></p>
+                        <p><strong>Description:</strong> <span id="modal-description"></span></p>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <a id="modal-detail-link" href="#" class="btn btn-primary">See more details</a>
@@ -115,31 +149,32 @@
 <script>
     $('#infoModal').on('show.bs.modal', function (event) {
         var button = $(event.relatedTarget);
-        var name = button.data('name');
-        var formula = button.data('formula');
-        var smiles = button.data('smiles');
-        var image = button.data('image');
-        var linkname = button.data('linkname');
-        var description = button.data('description');
-
         var modal = $(this);
 
-        modal.find('#modal-name').text(name);
-        modal.find('#modal-formula').text(formula);
-        modal.find('#modal-smiles').text(smiles);
-        modal.find('#modal-description').text(description);
-        modal.find('#modal-detail-link').attr('href', '/substance/' + linkname + '/');
+        // Основные данные
+        modal.find('#modal-name').text(button.data('name'));
+        modal.find('#modal-formula').text(button.data('formula'));
+        modal.find('#modal-smiles').text(button.data('smiles'));
+        modal.find('#modal-fdastatus').text(button.data('fdastatus'));
+        modal.find('#modal-description').text(button.data('description'));
+        modal.find('#modal-detail-link').attr('href', '/substance/' + button.data('linkname') + '/');
 
+        // Загрузка синонимов через AJAX
+        $.get('/get_synonyms/' + button.data('linkname') + '/', function(data) {
+            var synonyms = data.synonyms.join(', ');
+            modal.find('#modal-synonyms').text(synonyms || 'No synonyms available');
+        });
+
+        // Изображение
         var imageElement = modal.find('#modal-image');
-        if (image) {
-            imageElement.attr('src', image);
+        if (button.data('image')) {
+            imageElement.attr('src', button.data('image'));
             imageElement.show();
         } else {
             imageElement.hide();
         }
     });
 </script>
-
 
 {% endblock %}
 

@@ -8,7 +8,7 @@ class Synonyms(models.Model):
     Model representing a chem class (e.g. chronobiotics, radioprotectors).
     """
     synonymsmname = models.CharField(max_length=128, help_text="Enter a synonyms")
-    originalbiotic = models.ForeignKey('Chronobiotic', on_delete=models.CASCADE, blank=True)
+    originalbiotic = models.ForeignKey('Chronobiotic', on_delete=models.CASCADE, blank=True, related_name='synonyms')
     class Meta:
         db_table: str='synonyms'
 
@@ -17,6 +17,21 @@ class Synonyms(models.Model):
         String for representing the Model object (in Admin site etc.)
         """
         return self.synonymsmname
+class Articles(models.Model):
+    """
+    Model representing a chem class (e.g. chronobiotics, radioprotectors)
+    """
+    articlename = models.CharField(max_length=500, help_text="articlename")
+
+    articleurl = models.URLField(max_length=250, help_text="Enter a link about this target")
+    class Meta:
+        db_table: str='article'
+
+    def __str__(self):
+        """
+        String for representing the Model object (in Admin site etc.)
+        """
+        return self.articlename
 class Targets(models.Model):
     """
     Model representing a chem class (e.g. chronobiotics, radioprotectors)
@@ -32,6 +47,20 @@ class Targets(models.Model):
         String for representing the Model object (in Admin site etc.)
         """
         return self.targetsname
+class Effect(models.Model):
+    """
+    Model representing a chem class (e.g. chronobiotics, radioprotectors)
+    """
+    Effectname = models.CharField(max_length=150, help_text="Enter your effect")
+
+    class Meta:
+        db_table: str='effect'
+
+    def __str__(self):
+        """
+        String for representing the Model object (in Admin site etc.)
+        """
+        return self.Effectname
 class Mechanism(models.Model):
     """
     Model representing a chem class (e.g. chronobiotics, radioprotectors).
@@ -82,7 +111,7 @@ class Chronobiotic(models.Model):
     updphoto= models.ImageField(upload_to='media/')
     description = models.TextField(max_length=5000, help_text="Enter a  description of the biotic",blank=True)
     fdastatus = models.CharField(max_length=64,null=True,blank=True)
-    article= models.URLField(max_length = 200,null=True,blank=True)
+    articles= models.ManyToManyField(Articles, help_text="Select a targets of this ")
     linkslists=models.URLField(max_length=200,null=True,blank=True)
     pubchem = models.URLField(max_length=200,null=True,blank=True)
     chemspider = models.URLField(max_length=200, null=True,blank=True)
@@ -98,8 +127,9 @@ class Chronobiotic(models.Model):
     selleckchem = models.URLField(max_length=200, null=True,blank=True)
     # isbn = models.CharField('ISBN',max_length=13, help_text='13 Character <a href="https://www.isbn-international.org/content/what-isbn">ISBN number</a>')
     classf = models.ManyToManyField(Bioclass, help_text="Select a class for this molecula")
-    mechanisms = models.ManyToManyField(Mechanism, help_text="Select a synonyms of this ")
+    mechanisms = models.ManyToManyField(Mechanism, help_text="Select a mechanism of this ")
     target = models.ManyToManyField(Targets, help_text="Select a targets of this ")
+    effect= models.ManyToManyField(Effect, help_text="Select a effects of this ", blank=True)
     # ManyToManyField used because genre can contain many books. Books can cover many genres.
 
     # clinictrials = models.ManyToManyField(Clinicaltrials, help_text="Select a class for this biotic")
@@ -111,10 +141,3 @@ class Chronobiotic(models.Model):
         String for representing the Model object.
         """
         return self.gname
-
-
-    # def get_absolute_url(self):
-    #     """
-    #     Returns the url to access a particular book instance.
-    #     """
-    #     return reverse('biotic-detail', args=[str(self.id)])
