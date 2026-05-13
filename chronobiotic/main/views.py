@@ -39,6 +39,8 @@ def index(request):
 
 def about(request):
     return render(request, 'main/about.html')
+def publications(request):
+    return render(request, 'main/publications.html')
 def substance_detail(request, linkname):
     substance = get_object_or_404(Chronobiotic, linkname=linkname)
     return render(request, 'main/substance_detail.html', {'substance': substance})
