@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator
-from .models import Chronobiotic
+from .models import Chronobiotic, PublicationRecord
 from django.http import JsonResponse
 from django.db.models import Q
 
@@ -53,3 +53,13 @@ def get_synonyms(request, linkname):
         return JsonResponse({'synonyms': synonyms})
     except Chronobiotic.DoesNotExist:
         return JsonResponse({'synonyms': []})
+def publicationsrec(request):
+    # Берем все записи из новой таблицы
+    records = PublicationRecord.objects.all()
+    return render(request, 'main/publications.html', {'records': records})
+
+
+def rawdata(request):
+    # Фильтруем записи по типу 'date'
+    records = PublicationRecord.objects.filter(item_type='date')
+    return render(request, 'main/rawdata.html', {'records': records})

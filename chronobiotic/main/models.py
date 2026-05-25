@@ -141,3 +141,19 @@ class Chronobiotic(models.Model):
         String for representing the Model object.
         """
         return self.gname
+class PublicationRecord(models.Model):
+    TYPE_CHOICES = [
+        ('article', 'Article'),
+        ('date', 'Date'),
+    ]
+    item_type = models.CharField(max_length=10, choices=TYPE_CHOICES, verbose_name="Type")
+    title = models.CharField(max_length=200, verbose_name="Name")
+    link = models.URLField(max_length=500, verbose_name="Link")
+
+    class Meta:
+        db_table = 'publication_records'
+        verbose_name = "Publication"
+        verbose_name_plural = "Publications"
+
+    def __str__(self):
+        return self.title

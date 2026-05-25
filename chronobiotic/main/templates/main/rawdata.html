@@ -108,7 +108,14 @@
         <br>
         <h1>RAW DATA (Predicted chronobioitcs)</h1>
         <br>
-        <a href="https://pubmed.ncbi.nlm.nih.gov/41172309/" target="_blank">Chronobiotics as potential geroprotectors</a>
+       {% for item in records %}
+            <p>
+                <strong>Data Link:</strong>
+                <a href="{{ item.link }}" target="_blank">{{ item.title }}</a>
+            </p>
+        {% empty %}
+            <p>No data available yet.</p>
+        {% endfor %}
         <br>
          <br>
 
