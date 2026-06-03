@@ -2,7 +2,13 @@ from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator
 from .models import Chronobiotic, PublicationRecord
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
+from django.views.decorators.http import require_POST
+from django.conf import settings
+from .utills import  get_agent_url
+import requests
+
 
 
 def index(request):
@@ -63,3 +69,32 @@ def rawdata(request):
     # Фильтруем записи по типу 'date'
     records = PublicationRecord.objects.filter(item_type='date')
     return render(request, 'main/rawdata.html', {'records': records})
+@require_POST
+def chat_ajax(request):
+    message = request.POST.get('message', '').strip()
+    if not message:
+        return JsonResponse({'reply': 'Empty question.'})
+
+    try:
+        response = requests.post(
+            get_agent_url(),
+            json={'question': message},
+            headers={
+                'Content-Type': 'application/json',
+                'X-API-KEY': settings.AI_AGENT_KEY,
+            },
+            timeout=150
+        )
+        if response.status_code == 200:
+            return JsonResponse({'reply': response.json().get('answer', 'No answer.')})
+        elif response.status_code == 403:
+            return JsonResponse({'reply': 'Agent access error.'})
+        elif response.status_code == 503:
+            return JsonResponse({'reply': 'The agent is loading, please try again later.'})
+        else:
+            return JsonResponse({'reply': f'Error: {response.status_code}'})
+
+    except requests.exceptions.Timeout:
+        return JsonResponse({'reply': 'The agent thinks for a long time, try again.'})
+    except requests.exceptions.ConnectionError:
+        return JsonResponse({'reply': 'Failed to connect to agent.'})
