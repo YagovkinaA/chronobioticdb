@@ -157,3 +157,17 @@ class PublicationRecord(models.Model):
 
     def __str__(self):
         return self.title
+
+class ChatLog(models.Model):
+    question = models.TextField()
+    answer = models.TextField()
+    cards_used = models.JSONField(default=list)
+    card_names = models.JSONField(default=list)
+    time_seconds = models.FloatField(default=0.0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'chat_log'
+
+    def __str__(self):
+        return f"{self.created_at} — {self.question[:50]}"

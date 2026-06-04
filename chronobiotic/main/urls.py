@@ -11,4 +11,4 @@ urlpatterns = [
     path('get_synonyms/<str:linkname>/', views.get_synonyms, name='get_synonyms'),
     # path('index/<int:chronobiotic_id>',views.chronobiotic),
     path('chat/', views.chat_ajax, name='chat_ajax'),
-]
+    ]

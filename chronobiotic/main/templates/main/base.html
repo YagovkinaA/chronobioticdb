@@ -99,24 +99,69 @@
         <div class="card-header bg-secondary text-white">Chat with AI</div>
         <div id="chat-messages" class="chat-messages"></div>
         <div class="chat-input">
-            <input type="text" id="chat-text" class="form-control" placeholder="Type a message...">
+            <input type="text" id="chat-text" class="form-control" placeholder="Type a message(English)...">
             <button id="send-btn" class="btn btn-primary ml-2">Send</button>
         </div>
     </div>
 </div>
-<script>$('#chat-toggle').click(function() {
+<script>
+$('#chat-toggle').click(function() {
     $('#chat-window').toggle();
+    if ($('#chat-window').is(':visible')) loadHistory();
 });
 
-$('#send-btn').click(function() {
-    var message = $('#chat-text').val();
+// Константы
+var CHAT_KEY = 'chrono_chat_history';
+var CHAT_TIME_KEY = 'chrono_chat_time';
+var MAX_AGE_MS = 60 * 60 * 1000; // 1 час
+
+// Загрузка истории из localStorage
+function loadHistory() {
+    var lastTime = localStorage.getItem(CHAT_TIME_KEY);
+    if (lastTime && Date.now() - parseInt(lastTime) > MAX_AGE_MS) {
+        localStorage.removeItem(CHAT_KEY);
+        localStorage.removeItem(CHAT_TIME_KEY);
+    }
+    $('#chat-messages').empty();
+    var history = JSON.parse(localStorage.getItem(CHAT_KEY) || '[]');
+    history.forEach(function(msg) {
+        $('#chat-messages').append('<p><b>' + msg.role + ':</b> ' + msg.text + '</p>');
+    });
+    $('#chat-messages').scrollTop($('#chat-messages')[0].scrollHeight);
+}
+
+// Сохранение сообщения в историю
+function saveMessage(role, text) {
+    var history = JSON.parse(localStorage.getItem(CHAT_KEY) || '[]');
+    history.push({role: role, text: text});
+    localStorage.setItem(CHAT_KEY, JSON.stringify(history));
+    localStorage.setItem(CHAT_TIME_KEY, Date.now().toString());
+}
+
+// Отправка сообщения
+function sendMessage() {
+    var message = $('#chat-text').val().trim();
     if (!message) return;
 
-    // Добавляем сообщение пользователя в чат
-    $('#chat-messages').append('<p><b>You:</b> ' + message + '</p>');
-    $('#chat-text').val('');
+    // Блокируем кнопку пока ждём ответ
+    $('#send-btn').prop('disabled', true).text('...');
+    $('#chat-text').prop('disabled', true);
 
-    // Отправляем на наш Django view
+    $('#chat-messages').append('<p><b>You:</b> ' + message + '</p>');
+    saveMessage('You', message);
+    $('#chat-text').val('');
+    $('#chat-messages').scrollTop($('#chat-messages')[0].scrollHeight);
+
+    // Защита от DDoS — rate limit: не чаще 1 запроса в 10 секунд
+    var lastRequest = parseInt(localStorage.getItem('chrono_last_request') || '0');
+    if (Date.now() - lastRequest < 10000) {
+        $('#chat-messages').append('<p><b>Bot:</b> Please wait a few seconds before the next question.</p>');
+        $('#send-btn').prop('disabled', false).text('Send');
+        $('#chat-text').prop('disabled', false);
+        return;
+    }
+    localStorage.setItem('chrono_last_request', Date.now().toString());
+
     $.ajax({
         url: '{% url "chat_ajax" %}',
         type: 'POST',
@@ -126,9 +171,27 @@ $('#send-btn').click(function() {
         },
         success: function(response) {
             $('#chat-messages').append('<p><b>Bot:</b> ' + response.reply + '</p>');
+            saveMessage('Bot', response.reply);
             $('#chat-messages').scrollTop($('#chat-messages')[0].scrollHeight);
+        },
+        error: function() {
+            $('#chat-messages').append('<p><b>Bot:</b> Connection error.</p>');
+        },
+        complete: function() {
+            // Разблокируем после ответа
+            $('#send-btn').prop('disabled', false).text('Send');
+            $('#chat-text').prop('disabled', false);
+            $('#chat-text').focus();
         }
     });
-});</script>
+}
+
+// Enter для отправки
+$('#chat-text').keypress(function(e) {
+    if (e.which == 13 && !$('#send-btn').prop('disabled')) sendMessage();
+});
+
+$('#send-btn').click(sendMessage);
+</script>
 </body>
 </html>

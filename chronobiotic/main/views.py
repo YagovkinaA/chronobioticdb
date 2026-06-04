@@ -1,13 +1,16 @@
 from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator
-from .models import Chronobiotic, PublicationRecord
+from .models import Chronobiotic, PublicationRecord, ChatLog
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.core.mail import send_mail, EmailMessage
 from django.db.models import Q
 from django.views.decorators.http import require_POST
 from django.conf import settings
+from django_ratelimit.decorators import ratelimit
 from .utills import  get_agent_url
 import requests
+import csv, io
 
 
 
@@ -61,7 +64,7 @@ def get_synonyms(request, linkname):
         return JsonResponse({'synonyms': []})
 def publicationsrec(request):
     # Берем все записи из новой таблицы
-    records = PublicationRecord.objects.all()
+    records = PublicationRecord.objects.filter(item_type='article')
     return render(request, 'main/publications.html', {'records': records})
 
 
@@ -69,6 +72,7 @@ def rawdata(request):
     # Фильтруем записи по типу 'date'
     records = PublicationRecord.objects.filter(item_type='date')
     return render(request, 'main/rawdata.html', {'records': records})
+@ratelimit(key='ip', rate='6/m', block=True)
 @require_POST
 def chat_ajax(request):
     message = request.POST.get('message', '').strip()
@@ -86,7 +90,27 @@ def chat_ajax(request):
             timeout=150
         )
         if response.status_code == 200:
-            return JsonResponse({'reply': response.json().get('answer', 'No answer.')})
+            data = response.json()
+            answer = data.get('answer', 'No answer.')
+            cards_used = data.get('cards_used', [])
+            card_names = data.get('card_names', [])
+            time_seconds = data.get('time_seconds', 0.0)
+
+            # Сохраняем в БД
+            ChatLog.objects.create(
+                question=message,
+                answer=answer,
+                cards_used=cards_used,
+                card_names=card_names,
+                time_seconds=time_seconds,
+            )
+
+            # Проверяем — накопилось ли 100 записей
+            if ChatLog.objects.count() >= 100:
+                _dump_and_clean()
+
+            return JsonResponse({'reply': answer})
+
         elif response.status_code == 403:
             return JsonResponse({'reply': 'Agent access error.'})
         elif response.status_code == 503:
@@ -98,3 +122,33 @@ def chat_ajax(request):
         return JsonResponse({'reply': 'The agent thinks for a long time, try again.'})
     except requests.exceptions.ConnectionError:
         return JsonResponse({'reply': 'Failed to connect to agent.'})
+
+
+def _dump_and_clean():
+    logs = ChatLog.objects.order_by('created_at')
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['id', 'created_at', 'question', 'answer', 'cards_used', 'card_names', 'time_seconds'])
+    for log in logs:
+        writer.writerow([
+            log.id,
+            log.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            log.question,
+            log.answer,
+            ', '.join(map(str, log.cards_used)),
+            ', '.join(log.card_names),
+            log.time_seconds,
+        ])
+
+    email = EmailMessage(
+        subject=f'ChronobioticsDB — chat dump ({logs.count()} records)',
+        body='CSV with chat history attached.',
+        from_email=settings.EMAIL_HOST_USER,
+        to=[settings.CHAT_LOG_RECIPIENT],
+    )
+    email.attach('chat_dump.csv', output.getvalue(), 'text/csv')
+    email.send(fail_silently=True)
+
+    last = ChatLog.objects.order_by('-created_at').first()
+    ChatLog.objects.exclude(pk=last.pk).delete()
